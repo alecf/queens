@@ -8,6 +8,7 @@ import { useGameState } from './hooks/useGameState';
 import { useTimer } from './hooks/useTimer';
 import { useBestTimes } from './hooks/useBestTimes';
 import { useGameCache } from './hooks/useGameCache';
+import { useTheme } from './hooks/useTheme';
 import { encodeBoard, decodeBoard, extractBoardFromPath, boardToPath } from './lib/encoder';
 import { solve } from './lib/solver';
 import type { BoardSize } from './lib/types';
@@ -19,6 +20,7 @@ export function App() {
   const { elapsed, getElapsedMs, resetTimer } = useTimer(state.phase);
   const { getBestTime, recordTime } = useBestTimes();
   const { getCachedMarks, saveMarks } = useGameCache();
+  const { theme, cycleTheme } = useTheme();
 
   const [hintCooldown, setHintCooldown] = useState(0);
   const cooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -204,7 +206,12 @@ export function App() {
 
   return (
     <div className="app">
-      <h1 className="app-title">Queens</h1>
+      <div className="app-header">
+        <h1 className="app-title">Queens</h1>
+        <button className="theme-btn" onClick={cycleTheme} aria-label="Toggle colour theme">
+          {theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'Auto'}
+        </button>
+      </div>
       <Timer elapsed={elapsed} bestTime={bestTime} />
       <Board state={state} onSetMark={setMark} onSetMarks={setMarks} />
       <Controls

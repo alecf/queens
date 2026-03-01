@@ -1,9 +1,10 @@
+/* ── Light mode defaults ─────────────────────────────────────────────────── */
 :root {
   --color-bg: #fafafa;
   --color-text: #1a1a1a;
   --color-surface: #ffffff;
   --color-border: #e0e0e0;
-  --color-cell-border: #1a1a1a;
+  --color-cell-border: #111111;
   --color-conflict: #dc2626;
   --color-conflict-bg: rgba(220, 38, 38, 0.15);
   --color-accent: #2563eb;
@@ -11,6 +12,7 @@
   --color-muted: #6b7280;
   --color-success: #16a34a;
 
+  /* Wong colorblind-safe palette */
   --region-0: #E69F00;
   --region-1: #56B4E9;
   --region-2: #009E73;
@@ -21,12 +23,12 @@
   --region-7: #999999;
   --region-8: #E8D5B7;
 
-  --region-0-fill: rgba(230, 159, 0, 0.40);
-  --region-1-fill: rgba(86, 180, 233, 0.40);
-  --region-2-fill: rgba(0, 158, 115, 0.40);
-  --region-3-fill: rgba(240, 228, 66, 0.40);
-  --region-4-fill: rgba(0, 114, 178, 0.40);
-  --region-5-fill: rgba(213, 94, 0, 0.40);
+  --region-0-fill: rgba(230, 159,   0, 0.40);
+  --region-1-fill: rgba( 86, 180, 233, 0.40);
+  --region-2-fill: rgba(  0, 158, 115, 0.40);
+  --region-3-fill: rgba(240, 228,  66, 0.40);
+  --region-4-fill: rgba(  0, 114, 178, 0.40);
+  --region-5-fill: rgba(213,  94,   0, 0.40);
   --region-6-fill: rgba(204, 121, 167, 0.40);
   --region-7-fill: rgba(153, 153, 153, 0.40);
   --region-8-fill: rgba(232, 213, 183, 0.40);
@@ -34,13 +36,19 @@
   color-scheme: light dark;
 }
 
+/* ── Dark mode: 9 hues spread around the colour wheel, no two warm tones ──
+   0 orange · 1 blue · 2 green · 3 yellow · 4 purple
+   5 red    · 6 fuchsia · 7 slate · 8 cyan
+   Applied by system preference (when not overridden to light) OR by
+   [data-theme="dark"]. The block is duplicated because plain CSS has no
+   mixin/extend. ──────────────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --color-bg: #1a1a1a;
     --color-text: #f0f0f0;
     --color-surface: #2a2a2a;
     --color-border: #444444;
-    --color-cell-border: #666666;
+    --color-cell-border: #111111;
     --color-conflict: #ef4444;
     --color-conflict-bg: rgba(239, 68, 68, 0.2);
     --color-accent: #60a5fa;
@@ -48,30 +56,71 @@
     --color-muted: #9ca3af;
     --color-success: #22c55e;
 
-    /* Brighter, more saturated colors for visibility on dark backgrounds */
-    --region-0: #F59E0B;
-    --region-1: #38BDF8;
-    --region-2: #34D399;
-    --region-3: #FACC15;
-    --region-4: #A78BFA;
-    --region-5: #FB923C;
-    --region-6: #F472B6;
+    --region-0: #F97316;
+    --region-1: #3B82F6;
+    --region-2: #22C55E;
+    --region-3: #EAB308;
+    --region-4: #A855F7;
+    --region-5: #EF4444;
+    --region-6: #E879F9;
     --region-7: #94A3B8;
-    --region-8: #FB7185;
+    --region-8: #06B6D4;
 
-    /* Higher opacity fills for better contrast on dark background */
-    --region-0-fill: rgba(245, 158, 11, 0.50);
-    --region-1-fill: rgba(56, 189, 248, 0.50);
-    --region-2-fill: rgba(52, 211, 153, 0.50);
-    --region-3-fill: rgba(250, 204, 21, 0.50);
-    --region-4-fill: rgba(167, 139, 250, 0.50);
-    --region-5-fill: rgba(251, 146, 60, 0.50);
-    --region-6-fill: rgba(244, 114, 182, 0.50);
+    --region-0-fill: rgba(249, 115,  22, 0.50);
+    --region-1-fill: rgba( 59, 130, 246, 0.50);
+    --region-2-fill: rgba( 34, 197,  94, 0.50);
+    --region-3-fill: rgba(234, 179,   8, 0.50);
+    --region-4-fill: rgba(168,  85, 247, 0.50);
+    --region-5-fill: rgba(239,  68,  68, 0.50);
+    --region-6-fill: rgba(232, 121, 249, 0.50);
     --region-7-fill: rgba(148, 163, 184, 0.50);
-    --region-8-fill: rgba(251, 113, 133, 0.50);
+    --region-8-fill: rgba(  6, 182, 212, 0.50);
+
+    color-scheme: dark;
   }
 }
 
+:root[data-theme="dark"] {
+  --color-bg: #1a1a1a;
+  --color-text: #f0f0f0;
+  --color-surface: #2a2a2a;
+  --color-border: #444444;
+  --color-cell-border: #111111;
+  --color-conflict: #ef4444;
+  --color-conflict-bg: rgba(239, 68, 68, 0.2);
+  --color-accent: #60a5fa;
+  --color-accent-hover: #3b82f6;
+  --color-muted: #9ca3af;
+  --color-success: #22c55e;
+
+  --region-0: #F97316;
+  --region-1: #3B82F6;
+  --region-2: #22C55E;
+  --region-3: #EAB308;
+  --region-4: #A855F7;
+  --region-5: #EF4444;
+  --region-6: #E879F9;
+  --region-7: #94A3B8;
+  --region-8: #06B6D4;
+
+  --region-0-fill: rgba(249, 115,  22, 0.50);
+  --region-1-fill: rgba( 59, 130, 246, 0.50);
+  --region-2-fill: rgba( 34, 197,  94, 0.50);
+  --region-3-fill: rgba(234, 179,   8, 0.50);
+  --region-4-fill: rgba(168,  85, 247, 0.50);
+  --region-5-fill: rgba(239,  68,  68, 0.50);
+  --region-6-fill: rgba(232, 121, 249, 0.50);
+  --region-7-fill: rgba(148, 163, 184, 0.50);
+  --region-8-fill: rgba(  6, 182, 212, 0.50);
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* ── Reset ─────────────────────────────────────────────────────────────── */
 *,
 *::before,
 *::after {
@@ -86,6 +135,7 @@ body {
   min-height: 100dvh;
 }
 
+/* ── App shell ──────────────────────────────────────────────────────────── */
 .app {
   display: flex;
   flex-direction: column;
@@ -98,14 +148,42 @@ body {
   gap: 0.75rem;
 }
 
+.app-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+}
+
 .app-title {
+  grid-column: 2;
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
-/* Board */
+.theme-btn {
+  grid-column: 3;
+  justify-self: end;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.theme-btn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* ── Board ──────────────────────────────────────────────────────────────── */
 .board {
   display: grid;
   gap: 0;
@@ -171,7 +249,7 @@ body {
   cursor: default;
 }
 
-/* Timer */
+/* ── Timer ──────────────────────────────────────────────────────────────── */
 .timer {
   display: flex;
   align-items: baseline;
@@ -189,7 +267,7 @@ body {
   color: var(--color-muted);
 }
 
-/* Controls */
+/* ── Controls ───────────────────────────────────────────────────────────── */
 .controls {
   display: flex;
   flex-direction: column;
@@ -257,7 +335,7 @@ body {
   cursor: not-allowed;
 }
 
-/* Confirm dialog */
+/* ── Confirm dialog ─────────────────────────────────────────────────────── */
 .confirm-overlay {
   position: fixed;
   inset: 0;
@@ -317,7 +395,7 @@ body {
   border-color: #b91c1c;
 }
 
-/* Toast */
+/* ── Toast ──────────────────────────────────────────────────────────────── */
 .toast {
   position: fixed;
   bottom: max(2rem, env(safe-area-inset-bottom));
@@ -335,10 +413,10 @@ body {
 
 @keyframes toast-in {
   from { opacity: 0; transform: translateX(-50%) translateY(10px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-/* Win overlay */
+/* ── Win overlay ────────────────────────────────────────────────────────── */
 .win-overlay {
   position: fixed;
   inset: 0;
@@ -352,7 +430,7 @@ body {
 
 @keyframes fade-in {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
 .win-content {
@@ -368,7 +446,7 @@ body {
 
 @keyframes slide-up {
   from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
 .win-confetti {
@@ -427,7 +505,7 @@ body {
   border-color: var(--color-accent-hover);
 }
 
-/* Reduced motion */
+/* ── Reduced motion ─────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .win-overlay,
   .win-content,
