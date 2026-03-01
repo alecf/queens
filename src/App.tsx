@@ -7,15 +7,20 @@ import { WinOverlay } from './components/WinOverlay';
 import { useGameState } from './hooks/useGameState';
 import { useTimer } from './hooks/useTimer';
 import { useBestTimes } from './hooks/useBestTimes';
-import { encodeBoard, boardToPath } from './lib/encoder';
+import { useGameCache } from './hooks/useGameCache';
+import { useTheme } from './hooks/useTheme';
+import { encodeBoard, decodeBoard, extractBoardFromPath, boardToPath } from './lib/encoder';
+import { solve } from './lib/solver';
 import type { BoardSize } from './lib/types';
 
 const HINT_COOLDOWN_MS = 5000;
 
 export function App() {
-  const { state, setMark, setMarks, undo, hint, newGame, reset } = useGameState();
+  const { state, setMark, setMarks, undo, hint, newGame, reset, loadBoard } = useGameState();
   const { elapsed, getElapsedMs, resetTimer } = useTimer(state.phase);
   const { getBestTime, recordTime } = useBestTimes();
+  const { getCachedMarks, saveMarks } = useGameCache();
+  const { theme, cycleTheme } = useTheme();
 
   const [hintCooldown, setHintCooldown] = useState(0);
   const cooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -23,8 +28,47 @@ export function App() {
   const [isNewBest, setIsNewBest] = useState(false);
   const winTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Confirmation dialog state
+  const [confirmPending, setConfirmPending] = useState<null | {
+    message: string;
+    onConfirm: () => void;
+  }>(null);
+
   const currentSize = state.board.size as BoardSize;
   const bestTime = getBestTime(currentSize);
+
+  // True when the user has placed marks but hasn't won yet — requires confirmation to destroy
+  const hasProgress = state.history.length > 0 && state.phase !== 'won';
+
+  // Save marks to cache whenever they change (only when any marks exist)
+  useEffect(() => {
+    const hasAnyMark = state.marks.some(row => row.some(m => m !== 'empty'));
+    if (hasAnyMark) {
+      const encoded = encodeBoard(state.board);
+      saveMarks(encoded, state.marks);
+    }
+  }, [state.marks, state.board, saveMarks]);
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    function handlePopState() {
+      const path = window.location.pathname;
+      const encoded = extractBoardFromPath(path);
+      if (!encoded) return;
+      const board = decodeBoard(encoded);
+      if (!board) return;
+      const solutions = solve(board, 1);
+      if (solutions.length !== 1) return;
+      const cached = getCachedMarks(encoded);
+      loadBoard(board, solutions[0], cached ?? undefined);
+      resetTimer();
+      setShowWin(false);
+      setHintCooldown(0);
+    }
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [getCachedMarks, loadBoard, resetTimer]);
 
   // Handle hint cooldown
   useEffect(() => {
@@ -87,19 +131,39 @@ export function App() {
 
   const handleNewGame = useCallback(
     (size: BoardSize) => {
-      newGame(size);
-      resetTimer();
-      setShowWin(false);
-      setHintCooldown(0);
+      const doNewGame = () => {
+        newGame(size);
+        resetTimer();
+        setShowWin(false);
+        setHintCooldown(0);
+      };
+      if (hasProgress) {
+        setConfirmPending({
+          message: 'Start a new game? Your current progress will be lost.',
+          onConfirm: doNewGame,
+        });
+      } else {
+        doNewGame();
+      }
     },
-    [newGame, resetTimer],
+    [newGame, resetTimer, hasProgress],
   );
 
   const handleReset = useCallback(() => {
-    reset();
-    resetTimer();
-    setHintCooldown(0);
-  }, [reset, resetTimer]);
+    const doReset = () => {
+      reset();
+      resetTimer();
+      setHintCooldown(0);
+    };
+    if (hasProgress) {
+      setConfirmPending({
+        message: 'Reset the board? All your marks will be cleared.',
+        onConfirm: doReset,
+      });
+    } else {
+      doReset();
+    }
+  }, [reset, resetTimer, hasProgress]);
 
   const handleHint = useCallback(() => {
     if (hintCooldown > 0) return;
@@ -142,7 +206,12 @@ export function App() {
 
   return (
     <div className="app">
-      <h1 className="app-title">Queens</h1>
+      <div className="app-header">
+        <h1 className="app-title">Queens</h1>
+        <button className="theme-btn" onClick={cycleTheme} aria-label="Toggle colour theme">
+          {theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'Auto'}
+        </button>
+      </div>
       <Timer elapsed={elapsed} bestTime={bestTime} />
       <Board state={state} onSetMark={setMark} onSetMarks={setMarks} />
       <Controls
@@ -166,6 +235,27 @@ export function App() {
           onShare={handleShare}
           currentSize={currentSize}
         />
+      )}
+      {confirmPending && (
+        <div className="confirm-overlay" role="dialog" aria-modal="true">
+          <div className="confirm-dialog">
+            <p>{confirmPending.message}</p>
+            <div className="confirm-actions">
+              <button className="confirm-btn" onClick={() => setConfirmPending(null)}>
+                Cancel
+              </button>
+              <button
+                className="confirm-btn confirm-btn-danger"
+                onClick={() => {
+                  confirmPending.onConfirm();
+                  setConfirmPending(null);
+                }}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

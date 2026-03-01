@@ -14,6 +14,7 @@ import { generateBoard } from '../lib/generator';
 import { validateMarks, hasConflicts } from '../lib/validator';
 import { encodeBoard, decodeBoard, extractBoardFromPath, boardToPath } from '../lib/encoder';
 import { solve } from '../lib/solver';
+import { getCachedMarksFromStorage } from './useGameCache';
 
 function createEmptyMarks(size: number): CellMark[][] {
   return Array.from({ length: size }, () => new Array<CellMark>(size).fill('empty'));
@@ -128,7 +129,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'NEW_GAME': {
       const { board, solution } = generateBoard(action.size);
       const encoded = encodeBoard(board);
-      history.replaceState(null, '', boardToPath(encoded));
+      history.pushState(null, '', boardToPath(encoded));
       return createInitialState(board, solution);
     }
 
@@ -138,6 +139,26 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         marks: createEmptyMarks(state.board.size),
         conflicts: EMPTY_CONFLICTS,
         phase: 'idle',
+        history: [],
+        hintsUsed: 0,
+        lastHintTime: 0,
+      };
+    }
+
+    case 'LOAD_BOARD': {
+      const { board, solution } = action;
+      const marks = action.marks
+        ? action.marks.map(row => [...row])
+        : createEmptyMarks(board.size);
+      const conflicts = validateMarks(board, marks);
+      const phase = checkWin(board, marks, conflicts);
+      const hasAnyMark = marks.some(row => row.some(m => m !== 'empty'));
+      return {
+        board,
+        marks,
+        solution,
+        conflicts,
+        phase: phase === 'won' ? 'won' : (hasAnyMark ? 'playing' : 'idle'),
         history: [],
         hintsUsed: 0,
         lastHintTime: 0,
@@ -180,7 +201,14 @@ export function useGameState() {
 
   const reset = useCallback(() => dispatch({ type: 'RESET' }), []);
 
-  return { state, setMark, setMarks, undo, hint, newGame, reset };
+  const loadBoard = useCallback(
+    (board: Board, solution: readonly Position[], marks?: readonly (readonly CellMark[])[]) => {
+      dispatch({ type: 'LOAD_BOARD', board, solution, marks });
+    },
+    [],
+  );
+
+  return { state, setMark, setMarks, undo, hint, newGame, reset, loadBoard };
 }
 
 function getInitialState(): GameState {
@@ -192,6 +220,22 @@ function getInitialState(): GameState {
     if (board) {
       const solutions = solve(board, 1);
       if (solutions.length === 1) {
+        const cachedMarks = getCachedMarksFromStorage(encoded);
+        if (cachedMarks) {
+          const conflicts = validateMarks(board, cachedMarks);
+          const hasAnyMark = cachedMarks.some(row => row.some(m => m !== 'empty'));
+          const phase = checkWin(board, cachedMarks, conflicts);
+          return {
+            board,
+            marks: cachedMarks,
+            solution: solutions[0],
+            conflicts,
+            phase: phase === 'won' ? 'won' : (hasAnyMark ? 'playing' : 'idle'),
+            history: [],
+            hintsUsed: 0,
+            lastHintTime: 0,
+          };
+        }
         return createInitialState(board, solutions[0]);
       }
     }

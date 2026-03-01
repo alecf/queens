@@ -37,7 +37,13 @@ export type GameAction =
   | { readonly type: 'UNDO' }
   | { readonly type: 'NEW_GAME'; readonly size: BoardSize }
   | { readonly type: 'HINT' }
-  | { readonly type: 'RESET' };
+  | { readonly type: 'RESET' }
+  | {
+      readonly type: 'LOAD_BOARD';
+      readonly board: Board;
+      readonly solution: readonly Position[];
+      readonly marks?: readonly (readonly CellMark[])[];
+    };
 
 export const EMPTY_CONFLICTS: ConflictSet = {
   rows: new Set(),
