@@ -51,18 +51,23 @@ export function App() {
   }, [state.lastHintTime]);
 
   // Handle win
+  const hasHandledWinRef = useRef(false);
   useEffect(() => {
     if (state.phase === 'won') {
-      const timeMs = getElapsedMs();
-      const current = getBestTime(currentSize);
-      const newBest = current === null || timeMs < current;
-      if (newBest) recordTime(currentSize, timeMs);
-      setIsNewBest(newBest);
+      if (!hasHandledWinRef.current) {
+        hasHandledWinRef.current = true;
+        const timeMs = getElapsedMs();
+        const current = getBestTime(currentSize);
+        const newBest = current === null || timeMs < current;
+        if (newBest) recordTime(currentSize, timeMs);
+        setIsNewBest(newBest);
+      }
 
       winTimeoutRef.current = setTimeout(() => {
         setShowWin(true);
       }, 300);
     } else {
+      hasHandledWinRef.current = false;
       setShowWin(false);
       if (winTimeoutRef.current) {
         clearTimeout(winTimeoutRef.current);
