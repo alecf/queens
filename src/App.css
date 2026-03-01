@@ -3,6 +3,7 @@
   --color-text: #1a1a1a;
   --color-surface: #ffffff;
   --color-border: #e0e0e0;
+  --color-cell-border: #1a1a1a;
   --color-conflict: #dc2626;
   --color-conflict-bg: rgba(220, 38, 38, 0.15);
   --color-accent: #2563eb;
@@ -20,15 +21,15 @@
   --region-7: #999999;
   --region-8: #E8D5B7;
 
-  --region-0-fill: rgba(230, 159, 0, 0.35);
-  --region-1-fill: rgba(86, 180, 233, 0.35);
-  --region-2-fill: rgba(0, 158, 115, 0.35);
-  --region-3-fill: rgba(240, 228, 66, 0.35);
-  --region-4-fill: rgba(0, 114, 178, 0.35);
-  --region-5-fill: rgba(213, 94, 0, 0.35);
-  --region-6-fill: rgba(204, 121, 167, 0.35);
-  --region-7-fill: rgba(153, 153, 153, 0.35);
-  --region-8-fill: rgba(232, 213, 183, 0.35);
+  --region-0-fill: rgba(230, 159, 0, 0.40);
+  --region-1-fill: rgba(86, 180, 233, 0.40);
+  --region-2-fill: rgba(0, 158, 115, 0.40);
+  --region-3-fill: rgba(240, 228, 66, 0.40);
+  --region-4-fill: rgba(0, 114, 178, 0.40);
+  --region-5-fill: rgba(213, 94, 0, 0.40);
+  --region-6-fill: rgba(204, 121, 167, 0.40);
+  --region-7-fill: rgba(153, 153, 153, 0.40);
+  --region-8-fill: rgba(232, 213, 183, 0.40);
 
   color-scheme: light dark;
 }
@@ -39,6 +40,7 @@
     --color-text: #f0f0f0;
     --color-surface: #2a2a2a;
     --color-border: #444444;
+    --color-cell-border: #666666;
     --color-conflict: #ef4444;
     --color-conflict-bg: rgba(239, 68, 68, 0.2);
     --color-accent: #60a5fa;
@@ -46,25 +48,27 @@
     --color-muted: #9ca3af;
     --color-success: #22c55e;
 
-    --region-0: #C88600;
-    --region-1: #3A8BBF;
-    --region-2: #007A5A;
-    --region-3: #BFB530;
-    --region-4: #005A8C;
-    --region-5: #A84800;
-    --region-6: #A35D87;
-    --region-7: #6B6B6B;
-    --region-8: #8B7355;
+    /* Brighter, more saturated colors for visibility on dark backgrounds */
+    --region-0: #F59E0B;
+    --region-1: #38BDF8;
+    --region-2: #34D399;
+    --region-3: #FACC15;
+    --region-4: #A78BFA;
+    --region-5: #FB923C;
+    --region-6: #F472B6;
+    --region-7: #94A3B8;
+    --region-8: #FB7185;
 
-    --region-0-fill: rgba(200, 134, 0, 0.35);
-    --region-1-fill: rgba(58, 139, 191, 0.35);
-    --region-2-fill: rgba(0, 122, 90, 0.35);
-    --region-3-fill: rgba(191, 181, 48, 0.35);
-    --region-4-fill: rgba(0, 90, 140, 0.35);
-    --region-5-fill: rgba(168, 72, 0, 0.35);
-    --region-6-fill: rgba(163, 93, 135, 0.35);
-    --region-7-fill: rgba(107, 107, 107, 0.35);
-    --region-8-fill: rgba(139, 115, 85, 0.35);
+    /* Higher opacity fills for better contrast on dark background */
+    --region-0-fill: rgba(245, 158, 11, 0.50);
+    --region-1-fill: rgba(56, 189, 248, 0.50);
+    --region-2-fill: rgba(52, 211, 153, 0.50);
+    --region-3-fill: rgba(250, 204, 21, 0.50);
+    --region-4-fill: rgba(167, 139, 250, 0.50);
+    --region-5-fill: rgba(251, 146, 60, 0.50);
+    --region-6-fill: rgba(244, 114, 182, 0.50);
+    --region-7-fill: rgba(148, 163, 184, 0.50);
+    --region-8-fill: rgba(251, 113, 133, 0.50);
   }
 }
 
@@ -90,6 +94,7 @@ body {
   max-width: 600px;
   margin: 0 auto;
   padding: 1rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
   gap: 0.75rem;
 }
 
@@ -110,8 +115,7 @@ body {
 }
 
 .cell-wrapper {
-  border: 1px solid var(--color-border);
-  border-color: var(--color-text);
+  border: 1px solid var(--color-cell-border);
   aspect-ratio: 1;
 }
 
@@ -253,10 +257,70 @@ body {
   cursor: not-allowed;
 }
 
+/* Confirm dialog */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+
+.confirm-dialog {
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 300px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.confirm-dialog p {
+  margin: 0 0 1.25rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.confirm-btn {
+  padding: 0.5rem 1.25rem;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.confirm-btn:hover {
+  border-color: var(--color-accent);
+}
+
+.confirm-btn-danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: white;
+}
+
+.confirm-btn-danger:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
 /* Toast */
 .toast {
   position: fixed;
-  bottom: 2rem;
+  bottom: max(2rem, env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   padding: 0.5rem 1.25rem;
