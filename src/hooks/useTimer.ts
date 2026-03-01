@@ -1,10 +1,32 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { GamePhase } from '../lib/types';
 
-export function useTimer(phase: GamePhase) {
-  const [elapsed, setElapsed] = useState(0);
+interface PersistedTimer {
+  boardKey: string;
+  accumulatedMs: number;
+  startedAt: number | null;
+}
+
+function readPersistedTimer(boardKey: string): { accumulated: number; elapsed: number } {
+  try {
+    const raw = localStorage.getItem('queens-timer');
+    if (!raw) return { accumulated: 0, elapsed: 0 };
+    const p = JSON.parse(raw) as PersistedTimer;
+    if (p.boardKey !== boardKey) return { accumulated: 0, elapsed: 0 };
+    // If timer was running when saved, add elapsed since then
+    const accumulated = p.accumulatedMs + (p.startedAt !== null ? Date.now() - p.startedAt : 0);
+    return { accumulated, elapsed: Math.floor(accumulated / 1000) };
+  } catch {
+    return { accumulated: 0, elapsed: 0 };
+  }
+}
+
+export function useTimer(phase: GamePhase, boardKey: string) {
+  const [timerInit] = useState(() => readPersistedTimer(boardKey));
+
+  const [elapsed, setElapsed] = useState(timerInit.elapsed);
   const startTimeRef = useRef<number | null>(null);
-  const accumulatedRef = useRef(0);
+  const accumulatedRef = useRef(timerInit.accumulated);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const clearTimer = useCallback(() => {
@@ -14,6 +36,19 @@ export function useTimer(phase: GamePhase) {
     }
   }, []);
 
+  const saveTimerState = useCallback(() => {
+    try {
+      const state: PersistedTimer = {
+        boardKey,
+        accumulatedMs: accumulatedRef.current,
+        startedAt: startTimeRef.current,
+      };
+      localStorage.setItem('queens-timer', JSON.stringify(state));
+    } catch {
+      // localStorage unavailable
+    }
+  }, [boardKey]);
+
   const startTimer = useCallback(() => {
     if (intervalRef.current !== null) return; // Already running
     startTimeRef.current = Date.now();
@@ -21,8 +56,9 @@ export function useTimer(phase: GamePhase) {
       const now = Date.now();
       const running = startTimeRef.current ? now - startTimeRef.current : 0;
       setElapsed(Math.floor((accumulatedRef.current + running) / 1000));
+      saveTimerState();
     }, 1000);
-  }, []);
+  }, [saveTimerState]);
 
   const pauseTimer = useCallback(() => {
     if (startTimeRef.current !== null) {
@@ -30,25 +66,25 @@ export function useTimer(phase: GamePhase) {
       startTimeRef.current = null;
     }
     clearTimer();
-  }, [clearTimer]);
+    saveTimerState();
+  }, [clearTimer, saveTimerState]);
 
   const resetTimer = useCallback(() => {
     clearTimer();
     startTimeRef.current = null;
     accumulatedRef.current = 0;
     setElapsed(0);
-  }, [clearTimer]);
+    saveTimerState();
+  }, [clearTimer, saveTimerState]);
 
-  // Start/pause/reset based on game phase
+  // Start/pause based on game phase — do NOT reset on idle (reset keeps timer running)
   useEffect(() => {
-    if (phase === 'idle') {
-      resetTimer();
-    } else if (phase === 'playing') {
+    if (phase === 'playing') {
       startTimer();
     } else if (phase === 'won') {
       pauseTimer();
     }
-  }, [phase, startTimer, pauseTimer, resetTimer]);
+  }, [phase, startTimer, pauseTimer]);
 
   // Pause when tab is hidden, resume when visible
   useEffect(() => {

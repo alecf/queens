@@ -187,9 +187,10 @@ body {
 .board {
   display: grid;
   gap: 0;
-  width: 100%;
-  max-width: min(90vmin, 500px);
-  aspect-ratio: 1;
+  width: min(90vmin, 500px);
+  height: min(90vmin, 500px);
+  width: min(90dvmin, 500px);
+  height: min(90dvmin, 500px);
 }
 
 .cell-wrapper {
@@ -274,7 +275,6 @@ body {
   align-items: center;
   gap: 0.5rem;
   width: 100%;
-  position: relative;
 }
 
 .controls-row {

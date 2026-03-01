@@ -17,7 +17,8 @@ const HINT_COOLDOWN_MS = 5000;
 
 export function App() {
   const { state, setMark, setMarks, undo, hint, newGame, reset, loadBoard } = useGameState();
-  const { elapsed, getElapsedMs, resetTimer } = useTimer(state.phase);
+  const boardKey = encodeBoard(state.board);
+  const { elapsed, getElapsedMs, resetTimer } = useTimer(state.phase, boardKey);
   const { getBestTime, recordTime } = useBestTimes();
   const { getCachedMarks, saveMarks } = useGameCache();
   const { theme, cycleTheme } = useTheme();
@@ -152,7 +153,6 @@ export function App() {
   const handleReset = useCallback(() => {
     const doReset = () => {
       reset();
-      resetTimer();
       setHintCooldown(0);
     };
     if (hasProgress) {
@@ -163,7 +163,7 @@ export function App() {
     } else {
       doReset();
     }
-  }, [reset, resetTimer, hasProgress]);
+  }, [reset, hasProgress]);
 
   const handleHint = useCallback(() => {
     if (hintCooldown > 0) return;
