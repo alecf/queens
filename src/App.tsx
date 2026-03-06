@@ -15,6 +15,12 @@ import type { BoardSize } from './lib/types';
 
 const HINT_COOLDOWN_MS = 5000;
 
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 export function App() {
   const { state, setMark, setMarks, undo, hint, newGame, reset, loadBoard } = useGameState();
   const { elapsed, getElapsedMs, resetTimer } = useTimer(state.phase);
@@ -173,15 +179,17 @@ export function App() {
   const handleShare = useCallback(() => {
     const encoded = encodeBoard(state.board);
     const url = window.location.origin + boardToPath(encoded);
+    const timeChallenge = elapsed > 0 ? `Can you beat ${formatTime(elapsed)}? ` : '';
+    const text = `${timeChallenge}${url}`;
 
     if (navigator.share) {
-      navigator.share({ title: 'Queens Puzzle', url }).catch(() => {
-        navigator.clipboard.writeText(url).catch(() => {});
+      navigator.share({ title: 'Queens Puzzle', text }).catch(() => {
+        navigator.clipboard.writeText(text).catch(() => {});
       });
     } else {
-      navigator.clipboard.writeText(url).catch(() => {});
+      navigator.clipboard.writeText(text).catch(() => {});
     }
-  }, [state.board]);
+  }, [state.board, elapsed]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -233,6 +241,7 @@ export function App() {
           isNewBest={isNewBest}
           onNewGame={handleNewGame}
           onShare={handleShare}
+          onClose={() => setShowWin(false)}
           currentSize={currentSize}
         />
       )}
