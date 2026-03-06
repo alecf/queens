@@ -101,8 +101,9 @@ export function App() {
     };
   }, [state.lastHintTime]);
 
-  // Handle win
-  const hasHandledWinRef = useRef(false);
+  // Handle win — initialize to true if the state was restored as already-won on load,
+  // so we don't record a bogus 0:00 time or re-show the overlay on reload.
+  const hasHandledWinRef = useRef(state.phase === 'won');
   useEffect(() => {
     if (state.phase === 'won') {
       if (!hasHandledWinRef.current) {
@@ -112,11 +113,11 @@ export function App() {
         const newBest = current === null || timeMs < current;
         if (newBest) recordTime(currentSize, timeMs);
         setIsNewBest(newBest);
-      }
 
-      winTimeoutRef.current = setTimeout(() => {
-        setShowWin(true);
-      }, 300);
+        winTimeoutRef.current = setTimeout(() => {
+          setShowWin(true);
+        }, 300);
+      }
     } else {
       hasHandledWinRef.current = false;
       setShowWin(false);
