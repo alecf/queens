@@ -3,6 +3,7 @@ import './App.css';
 import { Board } from './components/Board';
 import { Controls } from './components/Controls';
 import { Timer } from './components/Timer';
+import { UpdateBanner } from './components/UpdateBanner';
 import { WinOverlay } from './components/WinOverlay';
 import { useGameState } from './hooks/useGameState';
 import { useTimer } from './hooks/useTimer';
@@ -214,6 +215,7 @@ export function App() {
 
   return (
     <div className="app">
+      <UpdateBanner />
       <div className="app-header">
         <h1 className="app-title">Queens</h1>
         <button className="theme-btn" onClick={cycleTheme} aria-label="Toggle colour theme">

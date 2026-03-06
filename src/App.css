@@ -395,6 +395,40 @@ body {
   border-color: #b91c1c;
 }
 
+/* ── Update banner ──────────────────────────────────────────────────────── */
+.update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--color-accent);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 200;
+}
+
+.update-banner button {
+  padding: 0.2rem 0.75rem;
+  border: 2px solid white;
+  border-radius: 6px;
+  background: transparent;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.update-banner button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 /* ── Toast ──────────────────────────────────────────────────────────────── */
 .toast {
   position: fixed;
