@@ -40,3 +40,10 @@ src/
 - **Board-level event delegation** — pointer events on Board, not individual Cells
 - **CSS custom properties** for theming — no CSS framework
 - **No additional dependencies** without explicit approval
+
+## Testing Guidelines
+
+- **Prefer pure-function tests** — `lib/` functions are easily tested without any setup; reach for those first
+- **Component tests via React Testing Library** — use for behaviour that only manifests at the React layer (effects, state interactions across hooks)
+- **Avoid over-mocking** — only mock what genuinely cannot run in the test environment (e.g. `virtual:pwa-register/react` is a Vite virtual module that doesn't exist in Node). Do not mock real modules (`localStorage`, timers via `vi.useFakeTimers()` are fine; mocking hooks or lib functions is a smell that the logic should be pushed down into pure functions instead)
+- **`vi.useFakeTimers()`** in component tests — always pair with `vi.useRealTimers()` in `afterEach`
