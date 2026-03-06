@@ -442,6 +442,30 @@ body {
   width: 90%;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slide-up 0.3s ease-out;
+  position: relative;
+}
+
+.win-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: none;
+  color: var(--color-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.win-close:hover {
+  background: var(--color-border);
+  color: var(--color-text);
 }
 
 @keyframes slide-up {

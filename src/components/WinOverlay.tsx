@@ -5,6 +5,7 @@ interface WinOverlayProps {
   isNewBest: boolean;
   onNewGame: (size: BoardSize) => void;
   onShare: () => void;
+  onClose: () => void;
   currentSize: BoardSize;
 }
 
@@ -19,11 +20,13 @@ export function WinOverlay({
   isNewBest,
   onNewGame,
   onShare,
+  onClose,
   currentSize,
 }: WinOverlayProps) {
   return (
     <div className="win-overlay" role="dialog" aria-modal="true" aria-label="Puzzle complete">
       <div className="win-content">
+        <button className="win-close" onClick={onClose} aria-label="Close">✕</button>
         <div className="win-confetti" aria-hidden="true">🎉</div>
         <h2 className="win-title">Puzzle Complete!</h2>
         <p className="win-time">{formatTime(elapsed)}</p>
