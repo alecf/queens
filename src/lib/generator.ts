@@ -48,12 +48,6 @@ function refineForUniqueness(
   const regions = board.regions.map(row => [...row]);
   const MAX_SWAPS = 1000;
 
-  // Track region sizes to prevent shrinking any region below 2 cells
-  const regionSizes = new Array<number>(size).fill(0);
-  for (let r = 0; r < size; r++)
-    for (let c = 0; c < size; c++)
-      regionSizes[regions[r][c]]++;
-
   for (let swap = 0; swap < MAX_SWAPS; swap++) {
     const currentBoard: Board = { size, regions: regions.map(r => [...r]) };
     const solutions = solve(currentBoard, 2);
@@ -108,11 +102,8 @@ function refineForUniqueness(
       }
 
       for (const newRegion of neighborRegions) {
-        // Don't shrink oldRegion to a single cell
-        const oldRegion = regions[cell.row][cell.col];
-        if (regionSizes[oldRegion] < 3) continue;
-
         // Try swapping this cell to the new region
+        const oldRegion = regions[cell.row][cell.col];
         regions[cell.row][cell.col] = newRegion;
 
         // Check that both regions remain connected
@@ -125,8 +116,6 @@ function refineForUniqueness(
           const queenForNew = targetSolution[newRegion];
           if (regions[queenForOld.row][queenForOld.col] === oldRegion &&
               regions[queenForNew.row][queenForNew.col] === newRegion) {
-            regionSizes[oldRegion]--;
-            regionSizes[newRegion]++;
             swapped = true;
             break;
           }
@@ -146,21 +135,14 @@ function refineForUniqueness(
 
       const { row, col, neighborRegion } = boundary;
       const oldRegion = regions[row][col];
+      regions[row][col] = neighborRegion;
 
-      // Don't shrink oldRegion to a single cell
-      if (regionSizes[oldRegion] >= 3) {
-        regions[row][col] = neighborRegion;
-
-        // Check connectivity and queen placement
-        if (!isRegionConnected(regions, size, oldRegion) ||
-            !isRegionConnected(regions, size, neighborRegion) ||
-            regions[targetSolution[oldRegion].row][targetSolution[oldRegion].col] !== oldRegion ||
-            regions[targetSolution[neighborRegion].row][targetSolution[neighborRegion].col] !== neighborRegion) {
-          regions[row][col] = oldRegion; // Revert
-        } else {
-          regionSizes[oldRegion]--;
-          regionSizes[neighborRegion]++;
-        }
+      // Check connectivity and queen placement
+      if (!isRegionConnected(regions, size, oldRegion) ||
+          !isRegionConnected(regions, size, neighborRegion) ||
+          regions[targetSolution[oldRegion].row][targetSolution[oldRegion].col] !== oldRegion ||
+          regions[targetSolution[neighborRegion].row][targetSolution[neighborRegion].col] !== neighborRegion) {
+        regions[row][col] = oldRegion; // Revert
       }
     }
   }
