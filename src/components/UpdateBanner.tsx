@@ -4,7 +4,13 @@ export function UpdateBanner() {
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
-  } = useRegisterSW();
+  } = useRegisterSW({
+    onRegistered(registration) {
+      if (registration) {
+        setInterval(() => registration.update(), 60_000);
+      }
+    },
+  });
 
   if (!needRefresh) return null;
 

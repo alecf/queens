@@ -36,6 +36,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,ico,woff,woff2}'],
         runtimeCaching: [],
+        updateViaCache: 'none',
       },
     }),
   ],
