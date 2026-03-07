@@ -48,6 +48,12 @@ function refineForUniqueness(
   const regions = board.regions.map(row => [...row]);
   const MAX_SWAPS = 1000;
 
+  // Track region sizes to prevent shrinking any region below 2 cells
+  const regionSizes = new Array<number>(size).fill(0);
+  for (let r = 0; r < size; r++)
+    for (let c = 0; c < size; c++)
+      regionSizes[regions[r][c]]++;
+
   for (let swap = 0; swap < MAX_SWAPS; swap++) {
     const currentBoard: Board = { size, regions: regions.map(r => [...r]) };
     const solutions = solve(currentBoard, 2);
@@ -102,8 +108,11 @@ function refineForUniqueness(
       }
 
       for (const newRegion of neighborRegions) {
-        // Try swapping this cell to the new region
+        // Don't shrink oldRegion to a single cell
         const oldRegion = regions[cell.row][cell.col];
+        if (regionSizes[oldRegion] < 3) continue;
+
+        // Try swapping this cell to the new region
         regions[cell.row][cell.col] = newRegion;
 
         // Check that both regions remain connected
@@ -116,6 +125,8 @@ function refineForUniqueness(
           const queenForNew = targetSolution[newRegion];
           if (regions[queenForOld.row][queenForOld.col] === oldRegion &&
               regions[queenForNew.row][queenForNew.col] === newRegion) {
+            regionSizes[oldRegion]--;
+            regionSizes[newRegion]++;
             swapped = true;
             break;
           }
@@ -135,14 +146,21 @@ function refineForUniqueness(
 
       const { row, col, neighborRegion } = boundary;
       const oldRegion = regions[row][col];
-      regions[row][col] = neighborRegion;
 
-      // Check connectivity and queen placement
-      if (!isRegionConnected(regions, size, oldRegion) ||
-          !isRegionConnected(regions, size, neighborRegion) ||
-          regions[targetSolution[oldRegion].row][targetSolution[oldRegion].col] !== oldRegion ||
-          regions[targetSolution[neighborRegion].row][targetSolution[neighborRegion].col] !== neighborRegion) {
-        regions[row][col] = oldRegion; // Revert
+      // Don't shrink oldRegion to a single cell
+      if (regionSizes[oldRegion] >= 3) {
+        regions[row][col] = neighborRegion;
+
+        // Check connectivity and queen placement
+        if (!isRegionConnected(regions, size, oldRegion) ||
+            !isRegionConnected(regions, size, neighborRegion) ||
+            regions[targetSolution[oldRegion].row][targetSolution[oldRegion].col] !== oldRegion ||
+            regions[targetSolution[neighborRegion].row][targetSolution[neighborRegion].col] !== neighborRegion) {
+          regions[row][col] = oldRegion; // Revert
+        } else {
+          regionSizes[oldRegion]--;
+          regionSizes[neighborRegion]++;
+        }
       }
     }
   }
@@ -260,10 +278,12 @@ function placeQueens(size: number): Position[] | null {
 
 /**
  * Grow initial regions from queen positions using BFS.
+ * Smaller regions are prioritized each round to prevent single-cell regions.
  */
 function growRegions(size: number, queens: Position[]): number[][] | null {
   const regions: number[][] = Array.from({ length: size }, () => new Array(size).fill(-1));
   const frontiers: Position[][] = queens.map(() => []);
+  const regionSizes = queens.map(() => 1); // track sizes for smallest-first bias
 
   for (let i = 0; i < queens.length; i++) {
     const q = queens[i];
@@ -280,7 +300,9 @@ function growRegions(size: number, queens: Position[]): number[][] | null {
   let unassigned = size * size - queens.length;
 
   while (unassigned > 0) {
+    // Shuffle first for randomness within ties, then sort smallest-first
     const order = shuffle(Array.from({ length: queens.length }, (_, i) => i));
+    order.sort((a, b) => regionSizes[a] - regionSizes[b]);
     let expandedAny = false;
 
     for (const regionId of order) {
@@ -298,6 +320,7 @@ function growRegions(size: number, queens: Position[]): number[][] | null {
             continue;
           }
           regions[cell.row][cell.col] = regionId;
+          regionSizes[regionId]++;
           unassigned--;
           expandedAny = true;
           frontier[idx] = frontier[frontier.length - 1];

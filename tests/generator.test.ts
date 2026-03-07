@@ -25,7 +25,7 @@ describe('generateBoard', () => {
           }
         }
 
-        // Each region has at least 1 cell
+        // Each region has at least 2 cells (single-cell regions are degenerate)
         const regionCounts = new Array(size).fill(0);
         for (let r = 0; r < size; r++) {
           for (let c = 0; c < size; c++) {
@@ -33,7 +33,7 @@ describe('generateBoard', () => {
           }
         }
         for (let i = 0; i < size; i++) {
-          expect(regionCounts[i]).toBeGreaterThan(0);
+          expect(regionCounts[i]).toBeGreaterThanOrEqual(2);
         }
 
         // Solution has N queens
