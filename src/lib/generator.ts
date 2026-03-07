@@ -260,10 +260,12 @@ function placeQueens(size: number): Position[] | null {
 
 /**
  * Grow initial regions from queen positions using BFS.
+ * Smaller regions are prioritized each round to prevent single-cell regions.
  */
 function growRegions(size: number, queens: Position[]): number[][] | null {
   const regions: number[][] = Array.from({ length: size }, () => new Array(size).fill(-1));
   const frontiers: Position[][] = queens.map(() => []);
+  const regionSizes = queens.map(() => 1); // track sizes for smallest-first bias
 
   for (let i = 0; i < queens.length; i++) {
     const q = queens[i];
@@ -280,7 +282,9 @@ function growRegions(size: number, queens: Position[]): number[][] | null {
   let unassigned = size * size - queens.length;
 
   while (unassigned > 0) {
+    // Shuffle first for randomness within ties, then sort smallest-first
     const order = shuffle(Array.from({ length: queens.length }, (_, i) => i));
+    order.sort((a, b) => regionSizes[a] - regionSizes[b]);
     let expandedAny = false;
 
     for (const regionId of order) {
@@ -298,6 +302,7 @@ function growRegions(size: number, queens: Position[]): number[][] | null {
             continue;
           }
           regions[cell.row][cell.col] = regionId;
+          regionSizes[regionId]++;
           unassigned--;
           expandedAny = true;
           frontier[idx] = frontier[frontier.length - 1];

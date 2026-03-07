@@ -33,7 +33,7 @@ describe('generateBoard', () => {
           }
         }
         for (let i = 0; i < size; i++) {
-          expect(regionCounts[i]).toBeGreaterThan(0);
+          expect(regionCounts[i]).toBeGreaterThanOrEqual(1);
         }
 
         // Solution has N queens
