@@ -32,23 +32,27 @@ export function useTimer(phase: GamePhase) {
     clearTimer();
   }, [clearTimer]);
 
-  const resetTimer = useCallback(() => {
+  const resetTimerRefs = useCallback(() => {
     clearTimer();
     startTimeRef.current = null;
     accumulatedRef.current = 0;
-    setElapsed(0);
   }, [clearTimer]);
+
+  const resetTimer = useCallback(() => {
+    resetTimerRefs();
+    setElapsed(0);
+  }, [resetTimerRefs]);
 
   // Start/pause/reset based on game phase
   useEffect(() => {
     if (phase === 'idle') {
-      resetTimer();
+      resetTimerRefs();
     } else if (phase === 'playing') {
       startTimer();
     } else if (phase === 'won') {
       pauseTimer();
     }
-  }, [phase, startTimer, pauseTimer, resetTimer]);
+  }, [phase, startTimer, pauseTimer, resetTimerRefs]);
 
   // Pause when tab is hidden, resume when visible
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { encodeBoard, decodeBoard, extractBoardFromPath, boardToPath } from '../src/lib/encoder';
 import { generateBoard } from '../src/lib/generator';
-import type { Board, BoardSize } from '../src/lib/types';
+import type { Board } from '../src/lib/types';
 
 describe('encoder round-trip', () => {
   for (const size of [5, 6, 7, 8, 9] as const) {

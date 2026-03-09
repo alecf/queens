@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { solve, hasUniqueSolution } from '../src/lib/solver';
-import type { Board } from '../src/lib/types';
+import type { Board, BoardSize } from '../src/lib/types';
 
 function makeBoard(size: number, regions: number[][]): Board {
-  return { size: size as any, regions };
+  return { size: size as BoardSize, regions };
 }
 
 describe('solve', () => {

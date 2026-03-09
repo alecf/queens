@@ -33,7 +33,7 @@ export function App() {
   const cooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [showWin, setShowWin] = useState(false);
   const [isNewBest, setIsNewBest] = useState(false);
-  const winTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 
   // Confirmation dialog state
   const [confirmPending, setConfirmPending] = useState<null | {
@@ -103,28 +103,31 @@ export function App() {
 
   // Handle win
   const hasHandledWinRef = useRef(false);
+  const pendingIsNewBestRef = useRef(false);
   useEffect(() => {
-    if (state.phase === 'won') {
-      if (!hasHandledWinRef.current) {
-        hasHandledWinRef.current = true;
-        const timeMs = getElapsedMs();
-        const current = getBestTime(currentSize);
-        const newBest = current === null || timeMs < current;
-        if (newBest) recordTime(currentSize, timeMs);
-        setIsNewBest(newBest);
-      }
-
-      winTimeoutRef.current = setTimeout(() => {
-        setShowWin(true);
-      }, 300);
-    } else {
+    if (state.phase !== 'won') {
       hasHandledWinRef.current = false;
-      setShowWin(false);
-      if (winTimeoutRef.current) {
-        clearTimeout(winTimeoutRef.current);
-        winTimeoutRef.current = null;
-      }
+      return;
     }
+
+    if (!hasHandledWinRef.current) {
+      hasHandledWinRef.current = true;
+      const timeMs = getElapsedMs();
+      const current = getBestTime(currentSize);
+      const newBest = current === null || timeMs < current;
+      if (newBest) recordTime(currentSize, timeMs);
+      pendingIsNewBestRef.current = newBest;
+    }
+
+    const timeout = setTimeout(() => {
+      setIsNewBest(pendingIsNewBestRef.current);
+      setShowWin(true);
+    }, 300);
+
+    return () => {
+      clearTimeout(timeout);
+      setShowWin(false);
+    };
   }, [state.phase, getElapsedMs, getBestTime, recordTime, currentSize]);
 
   // Save last-used size
