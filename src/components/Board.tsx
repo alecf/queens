@@ -136,19 +136,27 @@ export function Board({ state, onSetMark, onSetMarks }: BoardProps) {
     getCellAt,
   });
 
-  // Compute region borders
-  const getBorders = useCallback(
-    (row: number, col: number) => {
-      const region = board.regions[row][col];
-      return {
-        top: row === 0 || board.regions[row - 1][col] !== region,
-        bottom: row === size - 1 || board.regions[row + 1][col] !== region,
-        left: col === 0 || board.regions[row][col - 1] !== region,
-        right: col === size - 1 || board.regions[row][col + 1] !== region,
-      };
-    },
-    [board.regions, size],
-  );
+  // Compute SVG line segments for region borders (avoids CSS corner bevel artifacts)
+  const regionBorderSegments = useMemo(() => {
+    const segs: { x1: number; y1: number; x2: number; y2: number }[] = [];
+    // Horizontal segments: boundary between row r-1 and row r
+    for (let r = 0; r <= size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (r === 0 || r === size || board.regions[r - 1][c] !== board.regions[r][c]) {
+          segs.push({ x1: c, y1: r, x2: c + 1, y2: r });
+        }
+      }
+    }
+    // Vertical segments: boundary between col c-1 and col c
+    for (let c = 0; c <= size; c++) {
+      for (let r = 0; r < size; r++) {
+        if (c === 0 || c === size || board.regions[r][c - 1] !== board.regions[r][c]) {
+          segs.push({ x1: c, y1: r, x2: c, y2: r + 1 });
+        }
+      }
+    }
+    return segs;
+  }, [board.regions, size]);
 
   return (
     <div
@@ -167,29 +175,46 @@ export function Board({ state, onSetMark, onSetMarks }: BoardProps) {
       onPointerCancel={gesture.onPointerCancel}
     >
       {Array.from({ length: size }, (_, row) =>
-        Array.from({ length: size }, (_, col) => {
-          const borders = getBorders(row, col);
-          const borderStyle = {
-            borderTopWidth: borders.top ? '3px' : '1px',
-            borderBottomWidth: borders.bottom ? '3px' : '1px',
-            borderLeftWidth: borders.left ? '3px' : '1px',
-            borderRightWidth: borders.right ? '3px' : '1px',
-          };
-
-          return (
-            <div key={`${row}-${col}`} style={borderStyle} className="cell-wrapper">
-              <Cell
-                row={row}
-                col={col}
-                mark={marks[row][col]}
-                regionId={board.regions[row][col]}
-                isConflict={conflictCells.has(`${row},${col}`)}
-                isWon={phase === 'won'}
-              />
-            </div>
-          );
-        }),
+        Array.from({ length: size }, (_, col) => (
+          <div key={`${row}-${col}`} className="cell-wrapper">
+            <Cell
+              row={row}
+              col={col}
+              mark={marks[row][col]}
+              regionId={board.regions[row][col]}
+              isConflict={conflictCells.has(`${row},${col}`)}
+              isWon={phase === 'won'}
+            />
+          </div>
+        )),
       )}
+      <svg
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          overflow: 'visible',
+        }}
+        viewBox={`0 0 ${size} ${size}`}
+        preserveAspectRatio="none"
+      >
+        {regionBorderSegments.map((seg, i) => (
+          <line
+            key={i}
+            x1={seg.x1}
+            y1={seg.y1}
+            x2={seg.x2}
+            y2={seg.y2}
+            stroke="var(--color-cell-border)"
+            strokeWidth={3}
+            vectorEffect="non-scaling-stroke"
+            strokeLinecap="square"
+          />
+        ))}
+      </svg>
     </div>
   );
 }
