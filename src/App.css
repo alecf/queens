@@ -190,6 +190,7 @@ body {
   width: 100%;
   max-width: min(90vmin, 500px);
   aspect-ratio: 1;
+  position: relative;
 }
 
 .cell-wrapper {
