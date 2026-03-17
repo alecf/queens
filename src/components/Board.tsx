@@ -209,7 +209,7 @@ export function Board({ state, onSetMark, onSetMarks }: BoardProps) {
             x2={seg.x2}
             y2={seg.y2}
             stroke="var(--color-cell-border)"
-            strokeWidth={3}
+            strokeWidth={5}
             vectorEffect="non-scaling-stroke"
             strokeLinecap="square"
           />
