@@ -48,6 +48,14 @@ function refineForUniqueness(
   const regions = board.regions.map(row => [...row]);
   const MAX_SWAPS = 1000;
 
+  // Track region sizes to avoid creating single-cell regions during swaps
+  const regionSizes = new Array<number>(size).fill(0);
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      regionSizes[regions[r][c]]++;
+    }
+  }
+
   for (let swap = 0; swap < MAX_SWAPS; swap++) {
     const currentBoard: Board = { size, regions: regions.map(r => [...r]) };
     const solutions = solve(currentBoard, 2);
@@ -102,8 +110,12 @@ function refineForUniqueness(
       }
 
       for (const newRegion of neighborRegions) {
-        // Try swapping this cell to the new region
         const oldRegion = regions[cell.row][cell.col];
+
+        // Don't steal from a region that would end up with only 1 cell
+        if (regionSizes[oldRegion] <= 2) continue;
+
+        // Try swapping this cell to the new region
         regions[cell.row][cell.col] = newRegion;
 
         // Check that both regions remain connected
@@ -116,6 +128,8 @@ function refineForUniqueness(
           const queenForNew = targetSolution[newRegion];
           if (regions[queenForOld.row][queenForOld.col] === oldRegion &&
               regions[queenForNew.row][queenForNew.col] === newRegion) {
+            regionSizes[oldRegion]--;
+            regionSizes[newRegion]++;
             swapped = true;
             break;
           }
@@ -135,14 +149,21 @@ function refineForUniqueness(
 
       const { row, col, neighborRegion } = boundary;
       const oldRegion = regions[row][col];
-      regions[row][col] = neighborRegion;
 
-      // Check connectivity and queen placement
-      if (!isRegionConnected(regions, size, oldRegion) ||
-          !isRegionConnected(regions, size, neighborRegion) ||
-          regions[targetSolution[oldRegion].row][targetSolution[oldRegion].col] !== oldRegion ||
-          regions[targetSolution[neighborRegion].row][targetSolution[neighborRegion].col] !== neighborRegion) {
-        regions[row][col] = oldRegion; // Revert
+      // Don't create a single-cell region
+      if (regionSizes[oldRegion] > 2) {
+        regions[row][col] = neighborRegion;
+
+        // Check connectivity and queen placement
+        if (!isRegionConnected(regions, size, oldRegion) ||
+            !isRegionConnected(regions, size, neighborRegion) ||
+            regions[targetSolution[oldRegion].row][targetSolution[oldRegion].col] !== oldRegion ||
+            regions[targetSolution[neighborRegion].row][targetSolution[neighborRegion].col] !== neighborRegion) {
+          regions[row][col] = oldRegion; // Revert
+        } else {
+          regionSizes[oldRegion]--;
+          regionSizes[neighborRegion]++;
+        }
       }
     }
   }
@@ -282,9 +303,14 @@ function growRegions(size: number, queens: Position[]): number[][] | null {
   let unassigned = size * size - queens.length;
 
   while (unassigned > 0) {
-    // Shuffle first for randomness within ties, then sort smallest-first
+    // Shuffle first for randomness within ties, then sort smallest-first.
+    // Break further ties by frontier size (smallest frontier = most constrained = highest priority).
     const order = shuffle(Array.from({ length: queens.length }, (_, i) => i));
-    order.sort((a, b) => regionSizes[a] - regionSizes[b]);
+    order.sort((a, b) => {
+      const sizeDiff = regionSizes[a] - regionSizes[b];
+      if (sizeDiff !== 0) return sizeDiff;
+      return frontiers[a].length - frontiers[b].length;
+    });
     let expandedAny = false;
 
     for (const regionId of order) {
@@ -320,6 +346,32 @@ function growRegions(size: number, queens: Position[]): number[][] | null {
     }
 
     if (!expandedAny) return null;
+  }
+
+  // Post-processing: rescue any single-cell regions by stealing a boundary cell
+  // from a sufficiently large neighbor, preserving that neighbor's connectivity.
+  for (let i = 0; i < queens.length; i++) {
+    if (regionSizes[i] === 1) {
+      const q = queens[i];
+      let fixed = false;
+      for (const [dr, dc] of DIRS) {
+        if (fixed) break;
+        const nr = q.row + dr;
+        const nc = q.col + dc;
+        if (nr < 0 || nr >= size || nc < 0 || nc >= size) continue;
+        const neighborRegion = regions[nr][nc];
+        if (regionSizes[neighborRegion] < 3) continue; // keep neighbor at ≥2 cells
+        regions[nr][nc] = i;
+        if (isRegionConnected(regions, size, neighborRegion)) {
+          regionSizes[i]++;
+          regionSizes[neighborRegion]--;
+          fixed = true;
+        } else {
+          regions[nr][nc] = neighborRegion; // revert
+        }
+      }
+      if (!fixed) return null; // couldn't rescue; retry with new queen placement
+    }
   }
 
   return regions;
