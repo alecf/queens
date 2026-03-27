@@ -3,6 +3,7 @@ import './App.css';
 import { Board } from './components/Board';
 import { Controls } from './components/Controls';
 import { Timer } from './components/Timer';
+import { DifficultyStars } from './components/DifficultyStars';
 import { UpdateBanner } from './components/UpdateBanner';
 import { WinOverlay } from './components/WinOverlay';
 import { useGameState } from './hooks/useGameState';
@@ -51,7 +52,7 @@ export function App() {
   useEffect(() => {
     const hasAnyMark = state.marks.some(row => row.some(m => m !== 'empty'));
     if (hasAnyMark) {
-      const encoded = encodeBoard(state.board);
+      const encoded = encodeBoard(state.board, state.difficulty ?? undefined);
       saveMarks(encoded, state.marks);
     }
   }, [state.marks, state.board, saveMarks]);
@@ -62,12 +63,12 @@ export function App() {
       const path = window.location.pathname;
       const encoded = extractBoardFromPath(path);
       if (!encoded) return;
-      const board = decodeBoard(encoded);
-      if (!board) return;
-      const solutions = solve(board, 1);
+      const decoded = decodeBoard(encoded);
+      if (!decoded) return;
+      const { solutions } = solve(decoded.board, 1);
       if (solutions.length !== 1) return;
       const cached = getCachedMarks(encoded);
-      loadBoard(board, solutions[0], cached ?? undefined);
+      loadBoard(decoded.board, solutions[0], cached ?? undefined);
       resetTimer();
       setShowWin(false);
       setHintCooldown(0);
@@ -181,7 +182,7 @@ export function App() {
   }, [hint, hintCooldown]);
 
   const handleShare = useCallback(() => {
-    const encoded = encodeBoard(state.board);
+    const encoded = encodeBoard(state.board, state.difficulty ?? undefined);
     const url = window.location.origin + boardToPath(encoded);
     const timeChallenge = elapsed > 0 ? `Can you beat ${formatTime(elapsed)}? ` : '';
     const text = `${timeChallenge}${url}`;
@@ -225,7 +226,10 @@ export function App() {
           {theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'Auto'}
         </button>
       </div>
-      <Timer elapsed={elapsed} bestTime={bestTime} />
+      <div className="puzzle-info">
+        <Timer elapsed={elapsed} bestTime={bestTime} />
+        {state.difficulty !== null && <DifficultyStars difficulty={state.difficulty} />}
+      </div>
       <Board state={state} onSetMark={setMark} onSetMarks={setMarks} />
       <Controls
         currentSize={currentSize}

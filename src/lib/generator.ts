@@ -17,7 +17,12 @@ const DIRS: readonly [number, number][] = [[0, 1], [0, -1], [1, 0], [-1, 0]];
  * 3. Iteratively swap boundary cells between regions to eliminate alternative solutions
  * Budget: up to ~1 second.
  */
-export function generateBoard(size: BoardSize): { board: Board; solution: Position[] } {
+export interface GenerationMetrics {
+  readonly totalSolverNodes: number;
+  readonly swapCount: number;
+}
+
+export function generateBoard(size: BoardSize): { board: Board; solution: Position[]; metrics: GenerationMetrics } {
   const MAX_OUTER_RETRIES = 20;
 
   for (let outer = 0; outer < MAX_OUTER_RETRIES; outer++) {
@@ -42,11 +47,14 @@ export function generateBoard(size: BoardSize): { board: Board; solution: Positi
 function refineForUniqueness(
   board: Board,
   targetSolution: Position[],
-): { board: Board; solution: Position[] } | null {
+): { board: Board; solution: Position[]; metrics: GenerationMetrics } | null {
   const { size } = board;
   // Work with a mutable copy of regions
   const regions = board.regions.map(row => [...row]);
   const MAX_SWAPS = 1000;
+
+  let totalSolverNodes = 0;
+  let swapCount = 0;
 
   // Track region sizes to avoid creating single-cell regions during swaps
   const regionSizes = new Array<number>(size).fill(0);
@@ -58,15 +66,18 @@ function refineForUniqueness(
 
   for (let swap = 0; swap < MAX_SWAPS; swap++) {
     const currentBoard: Board = { size, regions: regions.map(r => [...r]) };
-    const solutions = solve(currentBoard, 2);
+    const { solutions, nodeCount } = solve(currentBoard, 2);
+    totalSolverNodes += nodeCount;
 
     if (solutions.length === 1) {
-      return { board: currentBoard, solution: solutions[0] };
+      return { board: currentBoard, solution: solutions[0], metrics: { totalSolverNodes, swapCount } };
     }
 
     if (solutions.length === 0) {
       return null; // Broken board, give up
     }
+
+    swapCount++;
 
     // Find a cell where the two solutions differ and swap its region
     const sol1 = solutions[0];
@@ -170,9 +181,10 @@ function refineForUniqueness(
 
   // Check one last time
   const finalBoard: Board = { size, regions: regions.map(r => [...r]) };
-  const finalSolutions = solve(finalBoard, 2);
+  const { solutions: finalSolutions, nodeCount: finalNodeCount } = solve(finalBoard, 2);
+  totalSolverNodes += finalNodeCount;
   if (finalSolutions.length === 1) {
-    return { board: finalBoard, solution: finalSolutions[0] };
+    return { board: finalBoard, solution: finalSolutions[0], metrics: { totalSolverNodes, swapCount } };
   }
 
   return null;

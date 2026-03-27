@@ -15,7 +15,7 @@ describe('solve', () => {
       [3, 3, 4, 4, 2],
       [3, 3, 4, 4, 4],
     ]);
-    const solutions = solve(board, 10);
+    const { solutions } = solve(board, 10);
     expect(solutions.length).toBeGreaterThan(0);
 
     // Verify first solution is valid
@@ -51,7 +51,7 @@ describe('solve', () => {
       [0, 0, 0],
       [0, 0, 0],
     ]);
-    const solutions = solve(board, 2);
+    const { solutions } = solve(board, 2);
     expect(solutions.length).toBe(0);
   });
 
@@ -63,7 +63,7 @@ describe('solve', () => {
       [3, 3, 4, 4, 2],
       [3, 3, 4, 4, 4],
     ]);
-    const solutions = solve(board, 1);
+    const { solutions } = solve(board, 1);
     expect(solutions.length).toBeLessThanOrEqual(1);
   });
 });

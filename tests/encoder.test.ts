@@ -6,19 +6,40 @@ import type { Board } from '../src/lib/types';
 describe('encoder round-trip', () => {
   for (const size of [5, 6, 7, 8, 9] as const) {
     it(`round-trips a size ${size} board`, () => {
-      const { board } = generateBoard(size);
+      const { board, metrics } = generateBoard(size);
       const encoded = encodeBoard(board);
       const decoded = decodeBoard(encoded);
 
       expect(decoded).not.toBeNull();
-      expect(decoded!.size).toBe(size);
+      expect(decoded!.board.size).toBe(size);
+      expect(decoded!.difficulty).toBeNull(); // no difficulty passed to encodeBoard
       for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
-          expect(decoded!.regions[r][c]).toBe(board.regions[r][c]);
+          expect(decoded!.board.regions[r][c]).toBe(board.regions[r][c]);
         }
       }
+      void metrics; // metrics available but not tested here
     });
   }
+
+  it('round-trips difficulty 1–5 for each value', () => {
+    const { board } = generateBoard(5);
+    for (const diff of [1, 2, 3, 4, 5] as const) {
+      const encoded = encodeBoard(board, diff);
+      const decoded = decodeBoard(encoded);
+      expect(decoded).not.toBeNull();
+      expect(decoded!.difficulty).toBe(diff);
+      expect(decoded!.board.size).toBe(5);
+    }
+  });
+
+  it('decodes old URLs (no difficulty digit) with difficulty null', () => {
+    const { board } = generateBoard(6);
+    const oldStyleEncoded = encodeBoard(board); // no difficulty
+    const decoded = decodeBoard(oldStyleEncoded);
+    expect(decoded).not.toBeNull();
+    expect(decoded!.difficulty).toBeNull();
+  });
 });
 
 describe('encodeBoard', () => {
