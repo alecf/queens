@@ -131,7 +131,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'NEW_GAME': {
       const { board, solution, metrics } = generateBoard(action.size);
       const difficulty = computeDifficulty(action.size, metrics.totalSolverNodes);
-      const encoded = encodeBoard(board);
+      const encoded = encodeBoard(board, difficulty);
       history.pushState(null, '', boardToPath(encoded));
       return createInitialState(board, solution, difficulty);
     }
@@ -220,8 +220,9 @@ function getInitialState(): GameState {
   const path = window.location.pathname;
   const encoded = extractBoardFromPath(path);
   if (encoded) {
-    const board = decodeBoard(encoded);
-    if (board) {
+    const decoded = decodeBoard(encoded);
+    if (decoded) {
+      const { board, difficulty } = decoded;
       const { solutions } = solve(board, 1);
       if (solutions.length === 1) {
         const cachedMarks = getCachedMarksFromStorage(encoded);
@@ -238,10 +239,10 @@ function getInitialState(): GameState {
             history: [],
             hintsUsed: 0,
             lastHintTime: 0,
-            difficulty: null,
+            difficulty,
           };
         }
-        return createInitialState(board, solutions[0]);
+        return createInitialState(board, solutions[0], difficulty);
       }
     }
   }
@@ -250,7 +251,7 @@ function getInitialState(): GameState {
   const savedSize = getSavedSize();
   const { board, solution, metrics } = generateBoard(savedSize);
   const difficulty = computeDifficulty(savedSize, metrics.totalSolverNodes);
-  const encodedNew = encodeBoard(board);
+  const encodedNew = encodeBoard(board, difficulty);
   history.replaceState(null, '', boardToPath(encodedNew));
   return createInitialState(board, solution, difficulty);
 }

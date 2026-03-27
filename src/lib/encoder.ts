@@ -12,11 +12,21 @@ function bitsPerCell(size: BoardSize): number {
 }
 
 /**
- * Encode a board into a compact URL-safe string.
- * Format: "v1" + size digit + base64url-encoded region data
- * Example: "v17AqM2x..." (version 1, size 7, encoded regions)
+ * Returns the number of base64url characters produced by encoding `byteCount` bytes
+ * with the unpadded scheme used here.
  */
-export function encodeBoard(board: Board): string {
+function base64urlLength(byteCount: number): number {
+  const remainder = byteCount % 3;
+  return Math.floor(byteCount / 3) * 4 + (remainder === 0 ? 0 : remainder + 1);
+}
+
+/**
+ * Encode a board into a compact URL-safe string.
+ * Format: "v1" + size digit + base64url-encoded region data [+ difficulty digit 1–5]
+ * Example: "v17AqM2x...3" (version 1, size 7, encoded regions, difficulty 3)
+ * The difficulty digit is optional for backward compatibility with old shared URLs.
+ */
+export function encodeBoard(board: Board, difficulty?: 1 | 2 | 3 | 4 | 5): string {
   const { size, regions } = board;
   const bits = bitsPerCell(size as BoardSize);
   const totalBits = size * size * bits;
@@ -38,14 +48,16 @@ export function encodeBoard(board: Board): string {
     }
   }
 
-  return VERSION + size.toString() + base64urlEncode(bytes);
+  const base = VERSION + size.toString() + base64urlEncode(bytes);
+  return difficulty !== undefined ? base + difficulty.toString() : base;
 }
 
 /**
- * Decode a compact string back into a Board.
+ * Decode a compact string back into a Board and optional difficulty.
+ * Accepts both old format (no difficulty) and new format (trailing digit 1–5).
  * Returns null if the string is invalid.
  */
-export function decodeBoard(encoded: string): Board | null {
+export function decodeBoard(encoded: string): { board: Board; difficulty: 1 | 2 | 3 | 4 | 5 | null } | null {
   if (!encoded || encoded.length > 200) return null;
 
   // Check version prefix
@@ -62,9 +74,26 @@ export function decodeBoard(encoded: string): Board | null {
   const bits = bitsPerCell(size as BoardSize);
   const totalBits = size * size * bits;
   const expectedBytes = Math.ceil(totalBits / 8);
+  const expectedBase64Len = base64urlLength(expectedBytes);
 
-  const data = rest.slice(1);
-  const bytes = base64urlDecode(data);
+  const payload = rest.slice(1); // base64url data + optional difficulty digit
+
+  // Extract optional trailing difficulty digit
+  let difficulty: 1 | 2 | 3 | 4 | 5 | null = null;
+  let boardData = payload;
+  if (payload.length === expectedBase64Len + 1) {
+    const last = payload[payload.length - 1];
+    if (last >= '1' && last <= '5') {
+      difficulty = parseInt(last, 10) as 1 | 2 | 3 | 4 | 5;
+      boardData = payload.slice(0, expectedBase64Len);
+    } else {
+      return null; // unexpected trailing character
+    }
+  } else if (payload.length !== expectedBase64Len) {
+    return null; // wrong length
+  }
+
+  const bytes = base64urlDecode(boardData);
   if (!bytes || bytes.length < expectedBytes) return null;
 
   // Decode regions
@@ -100,7 +129,7 @@ export function decodeBoard(encoded: string): Board | null {
     if (regionCounts[i] === 0) return null;
   }
 
-  return { size: size as BoardSize, regions };
+  return { board: { size: size as BoardSize, regions }, difficulty };
 }
 
 /**
