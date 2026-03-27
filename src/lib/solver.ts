@@ -8,9 +8,10 @@ const ADJACENT_OFFSETS: readonly [number, number][] = [
 
 /**
  * Solve a Queens puzzle using backtracking with MRV ordering and forward checking.
- * Returns up to `maxSolutions` solutions (default 2 for uniqueness checking).
+ * Returns up to `maxSolutions` solutions (default 2 for uniqueness checking),
+ * along with the number of search tree nodes visited.
  */
-export function solve(board: Board, maxSolutions = 2): Position[][] {
+export function solve(board: Board, maxSolutions = 2): { solutions: Position[][]; nodeCount: number } {
   const { size, regions } = board;
   const solutions: Position[][] = [];
 
@@ -112,12 +113,12 @@ export function solve(board: Board, maxSolutions = 2): Position[][] {
   }
 
   backtrack(new Set());
-  return solutions;
+  return { solutions, nodeCount };
 }
 
 /**
  * Check if a board has exactly one solution.
  */
 export function hasUniqueSolution(board: Board): boolean {
-  return solve(board, 2).length === 1;
+  return solve(board, 2).solutions.length === 1;
 }

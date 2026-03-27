@@ -49,7 +49,7 @@ describe('generateBoard', () => {
         expect(isComplete(board, marks)).toBe(true);
 
         // Solution is unique
-        const solutions = solve(board, 2);
+        const { solutions } = solve(board, 2);
         expect(solutions.length).toBe(1);
       });
     });
