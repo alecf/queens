@@ -250,6 +250,14 @@ body {
   cursor: default;
 }
 
+/* ── Puzzle info bar (timer left, difficulty right) ─────────────────────── */
+.puzzle-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
 /* ── Timer ──────────────────────────────────────────────────────────────── */
 .timer {
   display: flex;
@@ -266,6 +274,25 @@ body {
 .timer-best {
   font-size: 0.85rem;
   color: var(--color-muted);
+}
+
+/* ── Difficulty stars ───────────────────────────────────────────────────── */
+.difficulty {
+  display: flex;
+  gap: 0.1rem;
+}
+
+.star {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.star-filled {
+  color: #f59e0b;
+}
+
+.star-empty {
+  color: var(--color-border);
 }
 
 /* ── Controls ───────────────────────────────────────────────────────────── */

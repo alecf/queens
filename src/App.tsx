@@ -3,6 +3,7 @@ import './App.css';
 import { Board } from './components/Board';
 import { Controls } from './components/Controls';
 import { Timer } from './components/Timer';
+import { DifficultyStars } from './components/DifficultyStars';
 import { UpdateBanner } from './components/UpdateBanner';
 import { WinOverlay } from './components/WinOverlay';
 import { useGameState } from './hooks/useGameState';
@@ -64,7 +65,7 @@ export function App() {
       if (!encoded) return;
       const board = decodeBoard(encoded);
       if (!board) return;
-      const solutions = solve(board, 1);
+      const { solutions } = solve(board, 1);
       if (solutions.length !== 1) return;
       const cached = getCachedMarks(encoded);
       loadBoard(board, solutions[0], cached ?? undefined);
@@ -225,7 +226,10 @@ export function App() {
           {theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'Auto'}
         </button>
       </div>
-      <Timer elapsed={elapsed} bestTime={bestTime} />
+      <div className="puzzle-info">
+        <Timer elapsed={elapsed} bestTime={bestTime} />
+        {state.difficulty !== null && <DifficultyStars difficulty={state.difficulty} />}
+      </div>
       <Board state={state} onSetMark={setMark} onSetMarks={setMarks} />
       <Controls
         currentSize={currentSize}

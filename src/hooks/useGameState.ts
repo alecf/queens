@@ -14,13 +14,14 @@ import { generateBoard } from '../lib/generator';
 import { validateMarks, hasConflicts } from '../lib/validator';
 import { encodeBoard, decodeBoard, extractBoardFromPath, boardToPath } from '../lib/encoder';
 import { solve } from '../lib/solver';
+import { computeDifficulty } from '../lib/difficulty';
 import { getCachedMarksFromStorage } from './useGameCache';
 
 function createEmptyMarks(size: number): CellMark[][] {
   return Array.from({ length: size }, () => new Array<CellMark>(size).fill('empty'));
 }
 
-function createInitialState(board: Board, solution: Position[]): GameState {
+function createInitialState(board: Board, solution: Position[], difficulty: 1 | 2 | 3 | 4 | 5 | null = null): GameState {
   return {
     board,
     marks: createEmptyMarks(board.size),
@@ -30,6 +31,7 @@ function createInitialState(board: Board, solution: Position[]): GameState {
     history: [],
     hintsUsed: 0,
     lastHintTime: 0,
+    difficulty,
   };
 }
 
@@ -127,10 +129,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'NEW_GAME': {
-      const { board, solution } = generateBoard(action.size);
+      const { board, solution, metrics } = generateBoard(action.size);
+      const difficulty = computeDifficulty(action.size, metrics.totalSolverNodes);
       const encoded = encodeBoard(board);
       history.pushState(null, '', boardToPath(encoded));
-      return createInitialState(board, solution);
+      return createInitialState(board, solution, difficulty);
     }
 
     case 'RESET': {
@@ -162,6 +165,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         history: [],
         hintsUsed: 0,
         lastHintTime: 0,
+        difficulty: null,
       };
     }
   }
@@ -218,7 +222,7 @@ function getInitialState(): GameState {
   if (encoded) {
     const board = decodeBoard(encoded);
     if (board) {
-      const solutions = solve(board, 1);
+      const { solutions } = solve(board, 1);
       if (solutions.length === 1) {
         const cachedMarks = getCachedMarksFromStorage(encoded);
         if (cachedMarks) {
@@ -234,6 +238,7 @@ function getInitialState(): GameState {
             history: [],
             hintsUsed: 0,
             lastHintTime: 0,
+            difficulty: null,
           };
         }
         return createInitialState(board, solutions[0]);
@@ -243,10 +248,11 @@ function getInitialState(): GameState {
 
   // Generate new board
   const savedSize = getSavedSize();
-  const { board, solution } = generateBoard(savedSize);
+  const { board, solution, metrics } = generateBoard(savedSize);
+  const difficulty = computeDifficulty(savedSize, metrics.totalSolverNodes);
   const encodedNew = encodeBoard(board);
   history.replaceState(null, '', boardToPath(encodedNew));
-  return createInitialState(board, solution);
+  return createInitialState(board, solution, difficulty);
 }
 
 function getSavedSize(): BoardSize {
