@@ -1,4 +1,4 @@
-import { useCallback, useRef, useMemo } from 'react';
+import { useCallback, useRef, useMemo, useLayoutEffect } from 'react';
 import { Cell } from './Cell';
 import { usePointerGesture } from '../hooks/usePointerGesture';
 import type { CellMark, GameState, Position } from '../lib/types';
@@ -21,6 +21,19 @@ export function Board({ state, onSetMark, onSetMarks }: BoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   const dragChangesRef = useRef<Map<string, { pos: Position; mark: CellMark }>>(new Map());
   const dragModeRef = useRef<'set-x' | 'clear' | null>(null);
+
+  // iOS Safari bug: aspect-ratio on a grid container doesn't correctly constrain
+  // auto row heights when items also use aspect-ratio, causing cells to overflow
+  // the container and misalign with the SVG overlay. Fix by syncing height to width.
+  useLayoutEffect(() => {
+    const board = boardRef.current;
+    if (!board) return;
+    const ro = new ResizeObserver(() => {
+      board.style.height = `${board.offsetWidth}px`;
+    });
+    ro.observe(board);
+    return () => ro.disconnect();
+  }, []);
 
   const { board, marks, conflicts, phase } = state;
   const { size } = board;
@@ -166,6 +179,7 @@ export function Board({ state, onSetMark, onSetMarks }: BoardProps) {
       aria-label={`${size} by ${size} Queens puzzle board`}
       style={{
         gridTemplateColumns: `repeat(${size}, 1fr)`,
+        gridTemplateRows: `repeat(${size}, 1fr)`,
         touchAction: 'none',
         userSelect: 'none',
       } as React.CSSProperties}
@@ -191,10 +205,7 @@ export function Board({ state, onSetMark, onSetMarks }: BoardProps) {
       <svg
         style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
+          inset: 0,
           pointerEvents: 'none',
           overflow: 'visible',
         }}

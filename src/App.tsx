@@ -55,7 +55,7 @@ export function App() {
       const encoded = encodeBoard(state.board, state.difficulty ?? undefined);
       saveMarks(encoded, state.marks);
     }
-  }, [state.marks, state.board, saveMarks]);
+  }, [state.marks, state.board, state.difficulty, saveMarks]);
 
   // Handle browser back/forward navigation
   useEffect(() => {
@@ -194,7 +194,7 @@ export function App() {
     } else {
       navigator.clipboard.writeText(text).catch(() => {});
     }
-  }, [state.board, elapsed]);
+  }, [state.board, state.difficulty, elapsed]);
 
   // Keyboard navigation
   useEffect(() => {
