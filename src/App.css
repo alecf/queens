@@ -189,7 +189,11 @@ body {
   gap: 0;
   width: 100%;
   max-width: min(90vmin, 500px);
-  aspect-ratio: 1;
+  /* Explicit height instead of aspect-ratio: iOS Safari doesn't correctly
+     constrain grid auto row heights when the container height comes from
+     aspect-ratio, causing cells to overflow and misalign with the SVG overlay. */
+  height: min(90vmin, 500px);
+  grid-auto-rows: 1fr;
   position: relative;
 }
 
