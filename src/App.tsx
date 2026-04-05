@@ -55,7 +55,7 @@ export function App() {
       const encoded = encodeBoard(state.board, state.difficulty ?? undefined);
       saveMarks(encoded, state.marks);
     }
-  }, [state.marks, state.board, saveMarks]);
+  }, [state.marks, state.board, state.difficulty, saveMarks]);
 
   // Handle browser back/forward navigation
   useEffect(() => {
