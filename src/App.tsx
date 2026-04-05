@@ -194,7 +194,7 @@ export function App() {
     } else {
       navigator.clipboard.writeText(text).catch(() => {});
     }
-  }, [state.board, elapsed]);
+  }, [state.board, state.difficulty, elapsed]);
 
   // Keyboard navigation
   useEffect(() => {
