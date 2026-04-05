@@ -195,7 +195,6 @@ body {
 
 .cell-wrapper {
   border: 1px solid var(--color-cell-border);
-  aspect-ratio: 1;
 }
 
 .cell {
