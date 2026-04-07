@@ -89,7 +89,16 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       if (state.phase === 'won') return state;
       // Find a cell that isn't correctly marked
       const { board, solution, marks } = state;
-      const candidates: { pos: Position; mark: CellMark }[] = [];
+
+      // Priority buckets for hint selection:
+      // 1. x's that should be queens (wrong mark)
+      // 2. queens that should be x's (wrong mark)
+      // 3. unmarked cells that should be x's
+      // 4. unmarked cells that should be queens
+      const xShouldBeQueen: { pos: Position; mark: CellMark }[] = [];
+      const queenShouldBeX: { pos: Position; mark: CellMark }[] = [];
+      const emptyShouldBeX: { pos: Position; mark: CellMark }[] = [];
+      const emptyShouldBeQueen: { pos: Position; mark: CellMark }[] = [];
 
       // Build solution queen positions set
       const solutionSet = new Set(solution.map(p => p.row * board.size + p.col));
@@ -100,17 +109,28 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           const isQueenCell = solutionSet.has(key);
           const currentMark = marks[r][c];
 
-          if (isQueenCell && currentMark !== 'queen') {
-            candidates.push({ pos: { row: r, col: c }, mark: 'queen' });
-          } else if (!isQueenCell && currentMark !== 'x') {
-            candidates.push({ pos: { row: r, col: c }, mark: 'x' });
+          if (isQueenCell && currentMark === 'x') {
+            xShouldBeQueen.push({ pos: { row: r, col: c }, mark: 'queen' });
+          } else if (!isQueenCell && currentMark === 'queen') {
+            queenShouldBeX.push({ pos: { row: r, col: c }, mark: 'x' });
+          } else if (!isQueenCell && currentMark === 'empty') {
+            emptyShouldBeX.push({ pos: { row: r, col: c }, mark: 'x' });
+          } else if (isQueenCell && currentMark === 'empty') {
+            emptyShouldBeQueen.push({ pos: { row: r, col: c }, mark: 'queen' });
           }
         }
       }
 
+      // Pick from highest-priority non-empty bucket
+      const candidates =
+        xShouldBeQueen.length > 0 ? xShouldBeQueen :
+        queenShouldBeX.length > 0 ? queenShouldBeX :
+        emptyShouldBeX.length > 0 ? emptyShouldBeX :
+        emptyShouldBeQueen;
+
       if (candidates.length === 0) return state;
 
-      // Pick a random candidate
+      // Pick a random candidate from the highest-priority bucket
       const hint = candidates[Math.floor(Math.random() * candidates.length)];
       const newMarks = state.marks.map(row => [...row]);
       newMarks[hint.pos.row][hint.pos.col] = hint.mark;
