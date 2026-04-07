@@ -22,6 +22,7 @@ export interface GameState {
   readonly history: readonly (readonly (readonly CellMark[])[])[];
   readonly hintsUsed: number;
   readonly lastHintTime: number;
+  readonly lastHintPos: Position | null;
   /** Difficulty 1–5 from generation metrics; null for boards loaded via URL share. */
   readonly difficulty: 1 | 2 | 3 | 4 | 5 | null;
 }

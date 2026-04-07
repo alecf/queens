@@ -31,6 +31,7 @@ function createInitialState(board: Board, solution: Position[], difficulty: 1 | 
     history: [],
     hintsUsed: 0,
     lastHintTime: 0,
+    lastHintPos: null,
     difficulty,
   };
 }
@@ -145,6 +146,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         history: [...state.history, state.marks.map(row => [...row])],
         hintsUsed: state.hintsUsed + 1,
         lastHintTime: Date.now(),
+        lastHintPos: hint.pos,
       };
     }
 
@@ -165,6 +167,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         history: [],
         hintsUsed: 0,
         lastHintTime: 0,
+        lastHintPos: null,
       };
     }
 
@@ -185,6 +188,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         history: [],
         hintsUsed: 0,
         lastHintTime: 0,
+        lastHintPos: null,
         difficulty: null,
       };
     }

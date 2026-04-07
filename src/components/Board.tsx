@@ -22,7 +22,7 @@ export function Board({ state, onSetMark, onSetMarks }: BoardProps) {
   const dragChangesRef = useRef<Map<string, { pos: Position; mark: CellMark }>>(new Map());
   const dragModeRef = useRef<'set-x' | 'clear' | null>(null);
 
-  const { board, marks, conflicts, phase } = state;
+  const { board, marks, conflicts, phase, lastHintPos, hintsUsed } = state;
   const { size } = board;
 
   // Pre-compute conflict cell set for O(1) lookup
@@ -184,6 +184,8 @@ export function Board({ state, onSetMark, onSetMarks }: BoardProps) {
               regionId={board.regions[row][col]}
               isConflict={conflictCells.has(`${row},${col}`)}
               isWon={phase === 'won'}
+              isHinted={lastHintPos !== null && lastHintPos.row === row && lastHintPos.col === col}
+              hintKey={hintsUsed}
             />
           </div>
         )),

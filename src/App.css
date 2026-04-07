@@ -11,6 +11,8 @@
   --color-accent-hover: #1d4ed8;
   --color-muted: #6b7280;
   --color-success: #16a34a;
+  --color-hint: #b45309;
+  --color-hint-glow: rgba(180, 83, 9, 0.4);
 
   /* Wong colorblind-safe palette */
   --region-0: #E69F00;
@@ -55,6 +57,8 @@
     --color-accent-hover: #3b82f6;
     --color-muted: #9ca3af;
     --color-success: #22c55e;
+    --color-hint: #fbbf24;
+    --color-hint-glow: rgba(251, 191, 36, 0.35);
 
     --region-0: #F97316;
     --region-1: #3B82F6;
@@ -92,6 +96,8 @@
   --color-accent-hover: #3b82f6;
   --color-muted: #9ca3af;
   --color-success: #22c55e;
+  --color-hint: #fbbf24;
+  --color-hint-glow: rgba(251, 191, 36, 0.35);
 
   --region-0: #F97316;
   --region-1: #3B82F6;
@@ -251,6 +257,23 @@ body {
 
 .cell-won {
   cursor: default;
+}
+
+/* Hint reveal: animated border overlay that fades in then out over the cooldown */
+@keyframes hint-reveal {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.cell-hint-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 3px solid var(--color-hint);
+  box-shadow: inset 0 0 6px var(--color-hint-glow);
+  animation: hint-reveal 5s ease-out forwards;
 }
 
 /* ── Puzzle info bar (timer left, difficulty right) ─────────────────────── */
