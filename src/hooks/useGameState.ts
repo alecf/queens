@@ -263,6 +263,7 @@ function getInitialState(): GameState {
             history: [],
             hintsUsed: 0,
             lastHintTime: 0,
+            lastHintPos: null,
             difficulty,
           };
         }
