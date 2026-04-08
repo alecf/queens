@@ -8,6 +8,8 @@ interface CellProps {
   regionId: number;
   isConflict: boolean;
   isWon: boolean;
+  isHinted: boolean;
+  hintKey: number;
 }
 
 export const Cell = memo(function Cell({
@@ -17,6 +19,8 @@ export const Cell = memo(function Cell({
   regionId,
   isConflict,
   isWon,
+  isHinted,
+  hintKey,
 }: CellProps) {
   const className = [
     'cell',
@@ -38,6 +42,7 @@ export const Cell = memo(function Cell({
     >
       {mark === 'queen' && <span className="cell-icon">♛</span>}
       {mark === 'x' && <span className="cell-icon cell-x">✕</span>}
+      {isHinted && <div key={hintKey} className="cell-hint-overlay" />}
     </div>
   );
 });
