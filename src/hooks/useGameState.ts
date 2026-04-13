@@ -6,6 +6,7 @@ import type {
   GameAction,
   GamePhase,
   GameState,
+  GeneratorVariant,
   Position,
   ConflictSet,
 } from '../lib/types';
@@ -21,7 +22,12 @@ function createEmptyMarks(size: number): CellMark[][] {
   return Array.from({ length: size }, () => new Array<CellMark>(size).fill('empty'));
 }
 
-function createInitialState(board: Board, solution: Position[], difficulty: 1 | 2 | 3 | 4 | 5 | null = null): GameState {
+function createInitialState(
+  board: Board,
+  solution: Position[],
+  difficulty: 1 | 2 | 3 | 4 | 5 | null = null,
+  variant: GeneratorVariant | null = null,
+): GameState {
   return {
     board,
     marks: createEmptyMarks(board.size),
@@ -33,6 +39,7 @@ function createInitialState(board: Board, solution: Position[], difficulty: 1 | 
     lastHintTime: 0,
     lastHintPos: null,
     difficulty,
+    variant,
   };
 }
 
@@ -151,11 +158,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'NEW_GAME': {
-      const { board, solution, metrics } = generateBoard(action.size);
+      const { board, solution, metrics, variant } = generateBoard(action.size);
       const difficulty = computeDifficulty(action.size, metrics.totalSolverNodes);
       const encoded = encodeBoard(board, difficulty);
       history.pushState(null, '', boardToPath(encoded));
-      return createInitialState(board, solution, difficulty);
+      return createInitialState(board, solution, difficulty, variant);
     }
 
     case 'RESET': {
@@ -190,6 +197,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         lastHintTime: 0,
         lastHintPos: null,
         difficulty: null,
+        variant: null,
       };
     }
   }
@@ -265,6 +273,7 @@ function getInitialState(): GameState {
             lastHintTime: 0,
             lastHintPos: null,
             difficulty,
+            variant: null,
           };
         }
         return createInitialState(board, solutions[0], difficulty);
@@ -274,11 +283,11 @@ function getInitialState(): GameState {
 
   // Generate new board
   const savedSize = getSavedSize();
-  const { board, solution, metrics } = generateBoard(savedSize);
+  const { board, solution, metrics, variant } = generateBoard(savedSize);
   const difficulty = computeDifficulty(savedSize, metrics.totalSolverNodes);
   const encodedNew = encodeBoard(board, difficulty);
   history.replaceState(null, '', boardToPath(encodedNew));
-  return createInitialState(board, solution, difficulty);
+  return createInitialState(board, solution, difficulty, variant);
 }
 
 function getSavedSize(): BoardSize {
