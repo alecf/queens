@@ -1,4 +1,13 @@
 export type BoardSize = 5 | 6 | 7 | 8 | 9;
+
+// Generator algorithm variants — used internally and surfaced as a subtle UI stamp.
+// BFS styles differ in growth rate, region priority, and frontier cell bias.
+// Voronoi metrics assign each cell to the nearest queen under different distance functions.
+export type BFSStyleId = 'classic' | 'bursty' | 'spidery' | 'dominant' | 'balanced';
+export type VoronoiMetric = 'euclidean' | 'manhattan' | 'chebyshev' | 'weighted' | 'noisy';
+export type GeneratorVariant =
+  | { readonly algorithm: 'bfs'; readonly style: BFSStyleId }
+  | { readonly algorithm: 'voronoi'; readonly metric: VoronoiMetric };
 export type CellMark = 'empty' | 'x' | 'queen';
 
 export interface Position {
@@ -25,6 +34,8 @@ export interface GameState {
   readonly lastHintPos: Position | null;
   /** Difficulty 1–5 from generation metrics; null for boards loaded via URL share. */
   readonly difficulty: 1 | 2 | 3 | 4 | 5 | null;
+  /** Which algorithm+parameters generated this board; null for boards loaded via URL share. */
+  readonly variant: GeneratorVariant | null;
 }
 
 export interface ConflictSet {

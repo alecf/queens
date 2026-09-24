@@ -1,7 +1,37 @@
 import { useCallback, useRef, useMemo } from 'react';
 import { Cell } from './Cell';
 import { usePointerGesture } from '../hooks/usePointerGesture';
-import type { CellMark, GameState, Position } from '../lib/types';
+import type { CellMark, GameState, GeneratorVariant, Position } from '../lib/types';
+
+// ---------------------------------------------------------------------------
+// Variant stamp — a single Unicode glyph placed in the board's bottom-right
+// corner at low opacity. Looks like a decorative watermark to casual observers.
+//
+// Encoding:
+//   hollow shape → BFS algorithm    filled shape → Voronoi algorithm
+//   ○ / ●  classic   / euclidean    (circle  = original blob / circular metric)
+//   ◇ / ◆  bursty    / manhattan    (diamond = explosive / angular metric)
+//   △ / ▲  spidery   / chebyshev    (triangle = pointy / rectilinear metric)
+//   □ / ■  dominant  / weighted     (square  = chunky / anisotropic metric)
+//   ⬡ / ⬢  balanced  / noisy        (hexagon = structured / organic metric)
+// ---------------------------------------------------------------------------
+const VARIANT_GLYPH: Record<string, string> = {
+  'bfs:classic':        '○',
+  'bfs:bursty':         '◇',
+  'bfs:spidery':        '△',
+  'bfs:dominant':       '□',
+  'bfs:balanced':       '⬡',
+  'voronoi:euclidean':  '●',
+  'voronoi:manhattan':  '◆',
+  'voronoi:chebyshev':  '▲',
+  'voronoi:weighted':   '■',
+  'voronoi:noisy':      '⬢',
+};
+
+function variantGlyph(v: GeneratorVariant): string {
+  const key = v.algorithm === 'bfs' ? `bfs:${v.style}` : `voronoi:${v.metric}`;
+  return VARIANT_GLYPH[key] ?? '';
+}
 
 interface BoardProps {
   state: GameState;
@@ -214,6 +244,24 @@ export function Board({ state, onSetMark, onSetMarks }: BoardProps) {
           />
         ))}
       </svg>
+      {state.variant && (
+        <span
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            bottom: 3,
+            right: 5,
+            fontSize: 11,
+            lineHeight: 1,
+            opacity: 0.18,
+            pointerEvents: 'none',
+            userSelect: 'none',
+            fontFamily: 'monospace',
+          }}
+        >
+          {variantGlyph(state.variant)}
+        </span>
+      )}
     </div>
   );
 }
